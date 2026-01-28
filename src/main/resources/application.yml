@@ -1,0 +1,73 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: update
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    properties:
+      hibernate:
+        default_schema: hamilton
+        jdbc:
+          time_zone: UTC
+  datasource:
+    url: "jdbc:postgresql://localhost:5432/hamilton_manager"
+    username: postgres
+    password: 12345
+  jackson:
+    time-zone: UTC
+    serialization:
+      write-dates-as-timestamps: false
+    deserialization:
+      fail-on-unknown-properties: false
+    default-property-inclusion: non_null
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+  data:
+    rest:
+      default-page-size: 10
+      max-page-size: 100
+
+server:
+  port: 8085
+
+# Timezone configuration
+app:
+  timezone: UTC
+
+# Logging configuration - PageImpl serialization warning-ini suppress etmək üçün
+logging:
+  level:
+    org.springframework.data.web.config.SpringDataJacksonModules: ERROR
+    org.springframework.data.web.config.SpringDataJacksonConfiguration: ERROR
+    org.springframework.data.web.config.SpringDataJacksonModules$PageModule: ERROR
+    org.springframework.data.web.config.SpringDataJacksonModules$PageModule$WarningLoggingModifier: ERROR
+
+jwt:
+  secret-key: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+  access-token-expiration: 86400000  # 24 saat (24 hours)
+  refresh-token-expiration: 31536000000  # 1-illik (1 year)
+
+
+---
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    try-it-out-enabled: true
+    operations-sorter: method
+    tags-sorter: alpha
+    doc-expansion: none
+  api-docs:
+    path: /v3/api-docs
+    enabled: true
+  show-actuator: false
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json
+  packages-to-scan: www.hamilton.com.controller
+  paths-to-match: /api/**
+
+
+
+
+

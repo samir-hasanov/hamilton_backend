@@ -9,7 +9,7 @@ spring:
         jdbc:
           time_zone: UTC
   datasource:
-    url: "jdbc:postgresql://localhost:5432/hamilton_manager"
+    url: "jdbc:postgresql://localhost:5432/hamilton_finance"
     username: postgres
     password: 12345
   jackson:
@@ -35,6 +35,15 @@ server:
 app:
   timezone: UTC
 
+# MinIO — hamilton.minio.* (ümumi MINIO_* env-ləri ilə qarışmır)
+# HAMILTON_MINIO_ACCESS_KEY, HAMILTON_MINIO_SECRET_KEY, HAMILTON_MINIO_ENDPOINT ilə də əvəz oluna bilər
+hamilton:
+  minio:
+    endpoint: http://localhost:9000
+    access-key: ACCESS_KEY
+    secret-key: SECRET_KEY
+    bucket: hamilton
+
 # Logging configuration - PageImpl serialization warning-ini suppress etmək üçün
 logging:
   level:
@@ -43,10 +52,12 @@ logging:
     org.springframework.data.web.config.SpringDataJacksonModules$PageModule: ERROR
     org.springframework.data.web.config.SpringDataJacksonModules$PageModule$WarningLoggingModifier: ERROR
 
+# Token idarəetməsi (beynəlxalq standart)
+# Access: stateless JWT, qısa ömür; Refresh: DB-də saxlanılır, uzun ömür
 jwt:
   secret-key: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
-  access-token-expiration: 86400000  # 24 saat (24 hours)
-  refresh-token-expiration: 31536000000  # 1-illik (1 year)
+  access-token-expiration: 900000   # 15 dəqiqə (stateless, serverdə saxlanmır)
+  refresh-token-expiration: 604800000  # 7 gün (DB-də saxlanılır)
 
 
 ---

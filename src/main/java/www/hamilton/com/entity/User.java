@@ -51,6 +51,13 @@ public class User implements UserDetails {
     @Column(name = "phone_number")
     private String phoneNumber;
 
+    @Column(name = "display_name", length = 200)
+    private String displayName;
+
+    /** MinIO obyektinin tam URL-i və ya köhnə qeyd üçün yalnız obyekt açarı. */
+    @Column(name = "profile_image_file", length = 1024)
+    private String profileImageFile;
+
     @Column(name = "created_at")
     @JsonSerialize(using = InstantSerializer.class)
     private Instant createdAt;

@@ -10,6 +10,7 @@ import www.hamilton.com.entity.Permission;
 import www.hamilton.com.entity.Role;
 import www.hamilton.com.entity.User;
 
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class AuthMapper {
@@ -27,12 +28,25 @@ public class AuthMapper {
     }
 
     public static UserInfoResponse toUserInfoResponse(User user) {
+        String profileFile = user.getProfileImageFile();
+        boolean hasAvatar = profileFile != null && !profileFile.isBlank();
         return new UserInfoResponse(
                 user.getUsername(),
                 user.getEmail(),
                 user.getPhoneNumber(),
-                user.getRoles().stream()
-                        .map(Role::getName)
+                user.getDisplayName(),
+                hasAvatar,
+                user.getRoles() == null
+                        ? Set.of()
+                        : user.getRoles().stream()
+                        .map(role -> new RoleResponse(
+                                role.getName(),
+                                role.getPermissions() == null
+                                        ? Set.of()
+                                        : role.getPermissions().stream()
+                                        .map(Permission::getName)
+                                        .collect(Collectors.toSet())
+                        ))
                         .collect(Collectors.toSet())
         );
     }

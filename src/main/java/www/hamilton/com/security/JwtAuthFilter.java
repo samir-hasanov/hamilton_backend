@@ -15,11 +15,14 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-import www.hamilton.com.repository.TokenRepository;
 import www.hamilton.com.service.JwtService;
 
 import java.io.IOException;
 
+/**
+ * Access token stateless yoxlanılır: yalnız JWT imza və expiry (beynəlxalq standart).
+ * Serverdə access token saxlanılmır.
+ */
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -27,7 +30,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
-    private final TokenRepository tokenRepository;
 
     @Override
     protected void doFilterInternal(
@@ -70,32 +72,15 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             try {
                 UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
-                log.debug("User details loaded for username: {}", username);
-                log.debug("User authorities: {}", userDetails.getAuthorities());
-
-                boolean isTokenValid = tokenRepository.findByToken(jwt)
-                        .map(t -> !t.isExpired() && !t.isRevoked())
-                        .orElse(false);
-
-                if (jwtService.isTokenValid(jwt, userDetails) && isTokenValid) {
+                if (jwtService.isTokenValid(jwt, userDetails)) {
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                             userDetails,
                             null,
                             userDetails.getAuthorities()
                     );
-                    authToken.setDetails(
-                            new WebAuthenticationDetailsSource().buildDetails(request)
-                    );
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
-                    log.debug("Authentication set in SecurityContext for user: {}", username);
-                } else {
-                    log.debug("Token validation failed for user: {}", username);
-                    if (!jwtService.isTokenValid(jwt, userDetails)) {
-                        log.warn("JWT token validation failed for user: {}", username);
-                    }
-                    if (!isTokenValid) {
-                        log.warn("Token is expired or revoked in database for user: {}", username);
-                    }
+                    log.debug("Authentication set for user: {}", username);
                 }
             } catch (Exception e) {
                 log.error("Error processing JWT token for user: {}", username, e);

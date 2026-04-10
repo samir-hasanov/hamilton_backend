@@ -15,6 +15,7 @@ import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 
 @Service
@@ -31,6 +32,20 @@ public class JwtService {
 
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
+    }
+
+    /**
+     * Vaxtı keçmiş token üçün də subject (username) qaytarır.
+     * Logout-da refresh token DB-də olmadıqda istifadə üçün.
+     */
+    public Optional<String> extractUsernameIgnoringExpiration(String token) {
+        try {
+            return Optional.of(extractClaim(token, Claims::getSubject));
+        } catch (ExpiredJwtException e) {
+            return Optional.ofNullable(e.getClaims().getSubject());
+        } catch (Exception e) {
+            return Optional.empty();
+        }
     }
 
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {

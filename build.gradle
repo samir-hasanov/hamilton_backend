@@ -28,6 +28,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation 'org.springframework.boot:spring-boot-starter-quartz'
+    implementation group: 'io.minio', name: 'minio', version: '8.5.14'
     compileOnly 'org.projectlombok:lombok'
     //runtimeOnly 'org.postgresql:postgresql'
     implementation 'org.postgresql:postgresql:42.7.3'

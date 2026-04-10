@@ -29,6 +29,10 @@ public class Token {
     @Column(name = "created_at")
     private Instant createdAt;
 
+    /** Refresh token üçün: vaxtı keçəndə etibarsız (beynəlxalq standart: expires_at). */
+    @Column(name = "expires_at")
+    private Instant expiresAt;
+
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;

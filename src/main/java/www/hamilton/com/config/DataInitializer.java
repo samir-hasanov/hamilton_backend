@@ -1,4 +1,4 @@
-package www.hamilton.com.configuration;
+package www.hamilton.com.config;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -67,10 +67,9 @@ public class DataInitializer {
         try {
             log.info("Creating default permissions...");
             String[] permissions = {
-                    "USER_READ", "USER_WRITE", "USER_DELETE",
-                    "PLEDGE_READ", "PLEDGE_WRITE", "PLEDGE_DELETE",
-                    "CUSTOMER_READ", "CUSTOMER_WRITE", "CUSTOMER_DELETE",
-                    "CREDIT_READ", "CREDIT_WRITE", "CREDIT_DELETE"
+                    "USER_READ", "USER_WRITE", "USER_DELETE","USER_UPDATE",
+                    "WORKER_READ", "WORKER_WRITE", "WORKER_DELETE","WORKER_UPDATE",
+                    "MANAGER_READ", "MANAGER_WRITE", "MANAGER_DELETE","MANAGER_UPDATE",
             };
 
             for (String permissionName : permissions) {
@@ -105,9 +104,7 @@ public class DataInitializer {
             // Add basic permissions to USER role
             Set<Permission> userPermissions = new HashSet<Permission>();
             permissionRepository.findByName("USER_READ").ifPresent(userPermissions::add);
-            permissionRepository.findByName("PLEDGE_READ").ifPresent(userPermissions::add);
-            permissionRepository.findByName("CUSTOMER_READ").ifPresent(userPermissions::add);
-            permissionRepository.findByName("CREDIT_READ").ifPresent(userPermissions::add);
+            permissionRepository.findByName("WORKER_READ").ifPresent(userPermissions::add);
             userRole.setPermissions(userPermissions);
             userRole = roleRepository.save(userRole);
             log.info("USER role created with {} permissions", userRole.getPermissions().size());
@@ -128,6 +125,24 @@ public class DataInitializer {
             adminRole.setPermissions(allPermissions);
             adminRole = roleRepository.save(adminRole);
             log.info("ADMIN role created with {} permissions", adminRole.getPermissions().size());
+
+            // WORKER role (READ, WRITE, UPDATE, DELETE)
+            Role workerRole = roleRepository.findByName("WORKER")
+                    .orElseGet(() -> {
+                        Role role = Role.builder()
+                                .name("WORKER")
+                                .build();
+                        return roleRepository.save(role);
+                    });
+
+            Set<Permission> workerPermissions = new HashSet<>();
+            permissionRepository.findByName("WORKER_READ").ifPresent(workerPermissions::add);
+            permissionRepository.findByName("WORKER_WRITE").ifPresent(workerPermissions::add);
+            permissionRepository.findByName("WORKER_UPDATE").ifPresent(workerPermissions::add);
+            permissionRepository.findByName("WORKER_DELETE").ifPresent(workerPermissions::add);
+            workerRole.setPermissions(workerPermissions);
+            workerRole = roleRepository.save(workerRole);
+            log.info("WORKER role created with {} permissions", workerRole.getPermissions().size());
 
         } catch (Exception e) {
             log.error("Error creating default roles: {}", e.getMessage(), e);
@@ -175,16 +190,16 @@ public class DataInitializer {
     private void createDefaultTaskCategories() {
         try {
             log.info("Creating default task categories...");
-            
+
             String[][] categories = {
-                {"Maliyyə Hesabatları və Uçot", "Mühasibat uçotunun aparılması, maliyyə hesabatlarının hazırlanması, IFRS hesabatları, vergi bəyannamələrinin hazırlanması"},
-                {"Büdcə və Planlaşdırma", "Büdcə planlaşdırma, maliyyə planlaşdırma, strateji planlaşdırma"},
-                {"Vergi və Hüquqi Məsələlər", "Vergi məsələləri, hüquqi məsləhət, vergi optimallaşdırması"},
-                {"Audit və Daxili Nəzarət", "Audit xidmətləri, daxili nəzarət, risk idarəetməsi"},
-                {"İnvestisiya və Kapital İdarəetməsi", "İnvestisiya layihələri, kapital idarəetməsi, maliyyə təhlili"},
-                {"Xərclərin İdarə Edilməsi", "Xərc idarəetməsi, xərc optimallaşdırması, xərc analizi"},
-                {"Maliyyə Analizi və Konsaltinq", "Maliyyə analizi, konsaltinq xidmətləri, maliyyə təhlili"},
-                {"Maliyyə Texnologiyaları və Rəqəmsallaşma", "Maliyyə texnologiyaları, rəqəmsallaşma, avtomatlaşdırma"}
+                    {"Maliyyə Hesabatları və Uçot", "Mühasibat uçotunun aparılması, maliyyə hesabatlarının hazırlanması, IFRS hesabatları, vergi bəyannamələrinin hazırlanması"},
+                    {"Büdcə və Planlaşdırma", "Büdcə planlaşdırma, maliyyə planlaşdırma, strateji planlaşdırma"},
+                    {"Vergi və Hüquqi Məsələlər", "Vergi məsələləri, hüquqi məsləhət, vergi optimallaşdırması"},
+                    {"Audit və Daxili Nəzarət", "Audit xidmətləri, daxili nəzarət, risk idarəetməsi"},
+                    {"İnvestisiya və Kapital İdarəetməsi", "İnvestisiya layihələri, kapital idarəetməsi, maliyyə təhlili"},
+                    {"Xərclərin İdarə Edilməsi", "Xərc idarəetməsi, xərc optimallaşdırması, xərc analizi"},
+                    {"Maliyyə Analizi və Konsaltinq", "Maliyyə analizi, konsaltinq xidmətləri, maliyyə təhlili"},
+                    {"Maliyyə Texnologiyaları və Rəqəmsallaşma", "Maliyyə texnologiyaları, rəqəmsallaşma, avtomatlaşdırma"}
             };
 
             for (String[] categoryData : categories) {

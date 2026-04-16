@@ -15,6 +15,7 @@ spec:
     spec:
       containers:
         - name: backend
-          image: samirusername/hamilton-backend:1.0
+          image: backend:latest
+          imagePullPolicy: Never
           ports:
             - containerPort: 8085

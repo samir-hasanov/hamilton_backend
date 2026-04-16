@@ -30,6 +30,7 @@ public class DataInitializer {
     private final CompanyRepository companyRepository;
     private final TaskCategoryRepository taskCategoryRepository;
     private final PasswordEncoder passwordEncoder;
+    //default user create
 
     public DataInitializer(
             RoleRepository roleRepository,

@@ -18,4 +18,4 @@ spec:
           image: backend:latest
           imagePullPolicy: Never
           ports:
-            - containerPort: 8085
+            - containerPort: 8080

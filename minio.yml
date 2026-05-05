@@ -1,0 +1,85 @@
+# MinIO — avatar və tapşırıq faylları üçün (backend MinioClient).
+# postgres.yml-dən sonra, hamilton_backend.yml-dən əvvəl tətbiq edin.
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: hamilton-minio-secret
+  namespace: hamilton
+type: Opaque
+stringData:
+  access-key: minioadmin
+  secret-key: minioadmin-change-me
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hamilton-minio
+  namespace: hamilton
+  labels:
+    app: hamilton-minio
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hamilton-minio
+  template:
+    metadata:
+      labels:
+        app: hamilton-minio
+    spec:
+      containers:
+        - name: minio
+          image: minio/minio:latest
+          args: ["server", "/data", "--console-address", ":9001"]
+          ports:
+            - containerPort: 9000
+              name: api
+            - containerPort: 9001
+              name: console
+          env:
+            - name: MINIO_ROOT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: hamilton-minio-secret
+                  key: access-key
+            - name: MINIO_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: hamilton-minio-secret
+                  key: secret-key
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          readinessProbe:
+            httpGet:
+              path: /minio/health/live
+              port: 9000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "128Mi"
+            limits:
+              memory: "512Mi"
+      volumes:
+        - name: data
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hamilton-minio
+  namespace: hamilton
+spec:
+  type: ClusterIP
+  selector:
+    app: hamilton-minio
+  ports:
+    - name: api
+      port: 9000
+      targetPort: 9000
+    - name: console
+      port: 9001
+      targetPort: 9001

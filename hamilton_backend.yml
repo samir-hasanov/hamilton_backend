@@ -1,0 +1,116 @@
+# Backend şəkli: registry-dən çəkilir (push etdikdən sonra).
+# Lokal minikube (docker-env + Never): image: hamilton-backend:latest və imagePullPolicy: Never
+#
+# Gözləmələr:
+#   kubectl wait --for=condition=available deployment/hamilton-postgres -n hamilton --timeout=120s   # ilk dəfə PVC
+#   kubectl wait --for=condition=available deployment/hamilton-minio -n hamilton --timeout=120s
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: hamilton-backend-secret
+  namespace: hamilton
+type: Opaque
+stringData:
+  # Prod-da kubectl ilə güclü sıra yaradın; bu yalnız lokal/minikube üçündür.
+  jwt-secret-key: "404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hamilton-backend
+  namespace: hamilton
+  labels:
+    app: hamilton-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hamilton-backend
+  template:
+    metadata:
+      labels:
+        app: hamilton-backend
+    spec:
+      containers:
+        - name: backend
+          # ghcr.io/USER/REPO və ya docker.io/USER/... — REGISTRY + adını özünüzlə uyğunlaşdırın
+          image: ghcr.io/samir-hasanov/hamilton-backend:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8085
+              name: http
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:postgresql://hamilton-postgres.hamilton.svc.cluster.local:5432/hamilton_finance
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: hamilton-postgres-secret
+                  key: POSTGRES_USER
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: hamilton-postgres-secret
+                  key: POSTGRES_PASSWORD
+            - name: SPRING_JPA_HIBERNATE_DDL_AUTO
+              value: "update"
+            - name: SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA
+              value: hamilton
+            - name: HAMILTON_MINIO_ENDPOINT
+              value: http://hamilton-minio.hamilton.svc.cluster.local:9000
+            - name: HAMILTON_MINIO_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: hamilton-minio-secret
+                  key: access-key
+            - name: HAMILTON_MINIO_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: hamilton-minio-secret
+                  key: secret-key
+            - name: HAMILTON_MINIO_BUCKET
+              value: hamilton
+            - name: JWT_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: hamilton-backend-secret
+                  key: jwt-secret-key
+          startupProbe:
+            httpGet:
+              path: /v3/api-docs
+              port: 8085
+            failureThreshold: 30
+            periodSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /v3/api-docs
+              port: 8085
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /v3/api-docs
+              port: 8085
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "384Mi"
+            limits:
+              memory: "768Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hamilton-backend
+  namespace: hamilton
+spec:
+  type: ClusterIP
+  selector:
+    app: hamilton-backend
+  ports:
+    - name: http
+      port: 8085
+      targetPort: 8085

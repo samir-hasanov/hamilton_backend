@@ -1,0 +1,121 @@
+# Minikube / K8s: PostgreSQL üçün əsas infrastruktur.
+#
+# Əlavə sıra (WSL/Ubuntu):
+#   kubectl apply -f postgres.yml
+#   kubectl wait --for=condition=ready pod -l app=hamilton-postgres -n hamilton --timeout=120s
+# sonra:
+#   kubectl apply -f minio.yml
+#   kubectl apply -f hamilton_backend.yml
+#   kubectl apply -f ../../front/hamilton_web/hamilton_web.yml
+#
+# Şəkilləri əvvəl minikube-ə yükləyin (eval $(minikube docker-env)):
+#   docker build -t hamilton-backend:latest .
+#   cd ../../front/hamilton_web && docker build -t hamilton-web:latest --build-arg REACT_APP_API_BASE=/api/v1 .
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: hamilton
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: hamilton-postgres-secret
+  namespace: hamilton
+type: Opaque
+stringData:
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: hamilton-change-me-db
+  POSTGRES_DB: hamilton_finance
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hamilton-postgres-init
+  namespace: hamilton
+data:
+  01-schema.sql: |
+    CREATE SCHEMA IF NOT EXISTS hamilton;
+    ALTER SCHEMA hamilton OWNER TO postgres;
+    GRANT ALL ON SCHEMA hamilton TO postgres;
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: hamilton-postgres-pvc
+  namespace: hamilton
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hamilton-postgres
+  namespace: hamilton
+  labels:
+    app: hamilton-postgres
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: hamilton-postgres
+  template:
+    metadata:
+      labels:
+        app: hamilton-postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          ports:
+            - containerPort: 5432
+          envFrom:
+            - secretRef:
+                name: hamilton-postgres-secret
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+              subPath: pgdata
+            - name: init
+              mountPath: /docker-entrypoint-initdb.d
+              readOnly: true
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - pg_isready -U postgres -d hamilton_finance
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              memory: "512Mi"
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: hamilton-postgres-pvc
+        - name: init
+          configMap:
+            name: hamilton-postgres-init
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hamilton-postgres
+  namespace: hamilton
+spec:
+  type: ClusterIP
+  selector:
+    app: hamilton-postgres
+  ports:
+    - port: 5432
+      targetPort: 5432

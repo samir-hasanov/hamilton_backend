@@ -1,11 +1,11 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: backend-service
+  name: hamilton-backend
   namespace: hamilton
 spec:
   selector:
-    app: backend
+    app: hamilton-backend
   ports:
     - port: 8085
       targetPort: 8085

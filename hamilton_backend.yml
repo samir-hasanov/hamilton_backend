@@ -1,17 +1,17 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: backend
+  name: hamilton-backend
   namespace: hamilton
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: backend
+      app: hamilton-backend
   template:
     metadata:
       labels:
-        app: backend
+        app: hamilton-backend
     spec:
       containers:
         - name: backend
@@ -21,10 +21,46 @@ spec:
             - containerPort: 8085
           env:
             - name: SPRING_DATASOURCE_URL
-              value: "jdbc:postgresql://hamilton-postgres:5432/hamilton_finance"
+              value: jdbc:postgresql://hamilton-postgres:5432/hamilton_finance
             - name: SPRING_DATASOURCE_USERNAME
-              value: "postgres"
+              valueFrom:
+                secretKeyRef:
+                  name: hamilton-postgres-secret
+                  key: POSTGRES_USER
             - name: SPRING_DATASOURCE_PASSWORD
-              value: "12345"
+              valueFrom:
+                secretKeyRef:
+                  name: hamilton-postgres-secret
+                  key: POSTGRES_PASSWORD
+            - name: SPRING_JPA_HIBERNATE_DDL_AUTO
+              value: update
+            - name: SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA
+              value: hamilton
             - name: SERVER_PORT
               value: "8085"
+            - name: HAMILTON_MINIO_ENDPOINT
+              value: http://hamilton-minio:9000
+            - name: HAMILTON_MINIO_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: hamilton-minio-secret
+                  key: access-key
+            - name: HAMILTON_MINIO_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: hamilton-minio-secret
+                  key: secret-key
+            - name: HAMILTON_MINIO_BUCKET
+              value: hamilton
+          readinessProbe:
+            httpGet:
+              path: /v3/api-docs
+              port: 8085
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /v3/api-docs
+              port: 8085
+            initialDelaySeconds: 40
+            periodSeconds: 30

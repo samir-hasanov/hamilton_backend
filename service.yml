@@ -7,6 +7,6 @@ spec:
   selector:
     app: backend
   ports:
-    - port: 80
-      targetPort: 8080
-  type: NodePort
+    - port: 8085
+      targetPort: 8085
+  type: ClusterIPs

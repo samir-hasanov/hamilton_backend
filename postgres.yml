@@ -6,7 +6,7 @@ metadata:
 type: Opaque
 stringData:
   POSTGRES_USER: postgres
-  POSTGRES_PASSWORD: hamilton-change-me-db
+  POSTGRES_PASSWORD: 12345
   POSTGRES_DB: hamilton_finance
 ---
 apiVersion: v1
@@ -60,8 +60,8 @@ spec:
               mountPath: /docker-entrypoint-initdb.d
           readinessProbe:
             exec:
-              command: ["pg_isready","-U","postgres","-d","hamilton_finance"]
-            initialDelaySeconds: 5
+              command: ["pg_isready","-U","postgres"]
+            initialDelaySeconds: 10
             periodSeconds: 5
       volumes:
         - name: data

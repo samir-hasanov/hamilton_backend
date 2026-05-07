@@ -19,7 +19,7 @@ metadata:
   namespace: hamilton
 
 spec:
-  storageClassName: standard
+  storageClassName: hostpath
 
   accessModes:
     - ReadWriteOnce

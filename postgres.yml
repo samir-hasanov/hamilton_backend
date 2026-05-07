@@ -11,6 +11,19 @@ stringData:
 
 ---
 apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: hamilton-postgres-pvc
+  namespace: hamilton
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+
+---
+apiVersion: v1
 kind: ConfigMap
 metadata:
   name: hamilton-postgres-init
@@ -64,7 +77,8 @@ spec:
 
       volumes:
         - name: data
-          emptyDir: {}
+          persistentVolumeClaim:
+            claimName: hamilton-postgres-pvc
 
         - name: init
           configMap:

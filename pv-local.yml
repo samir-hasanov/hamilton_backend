@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: hamilton-postgres-pv
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: hostpath
+  persistentVolumeReclaimPolicy: Delete
+  hostPath:
+    path: /mnt/data/hamilton-postgres
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: hamilton-minio-pv
+spec:
+  capacity:
+    storage: 2Gi
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: hostpath
+  persistentVolumeReclaimPolicy: Delete
+  hostPath:
+    path: /mnt/data/hamilton-minio

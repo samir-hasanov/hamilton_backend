@@ -4,42 +4,53 @@ metadata:
   name: hamilton-postgres-secret
   namespace: hamilton
 type: Opaque
+
 stringData:
-  POSTGRES_USER: "postgres"
-  POSTGRES_PASSWORD: "12345"
-  POSTGRES_DB: "hamilton_finance"
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: 12345
+  POSTGRES_DB: hamilton_finance
 
 ---
+
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: hamilton-postgres-pvc
   namespace: hamilton
+
 spec:
+  storageClassName: standard
+
   accessModes:
     - ReadWriteOnce
+
   resources:
     requests:
       storage: 5Gi
 
 ---
+
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: hamilton-postgres-init
   namespace: hamilton
+
 data:
   01-schema.sql: |
     CREATE SCHEMA IF NOT EXISTS hamilton;
 
 ---
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: hamilton-postgres
   namespace: hamilton
+
 spec:
   replicas: 1
+
   selector:
     matchLabels:
       app: hamilton-postgres
@@ -62,29 +73,33 @@ spec:
                 name: hamilton-postgres-secret
 
           volumeMounts:
-            - name: data
+            - name: postgres-data
               mountPath: /var/lib/postgresql/data
 
-            - name: init
+            - name: postgres-init
               mountPath: /docker-entrypoint-initdb.d
 
           readinessProbe:
             exec:
-              command: ["pg_isready","-U","postgres"]
+              command:
+                - pg_isready
+                - -U
+                - postgres
 
             initialDelaySeconds: 10
             periodSeconds: 5
 
       volumes:
-        - name: data
+        - name: postgres-data
           persistentVolumeClaim:
             claimName: hamilton-postgres-pvc
 
-        - name: init
+        - name: postgres-init
           configMap:
             name: hamilton-postgres-init
 
 ---
+
 apiVersion: v1
 kind: Service
 metadata:

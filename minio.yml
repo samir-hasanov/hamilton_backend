@@ -3,77 +3,107 @@ kind: Secret
 metadata:
   name: hamilton-minio-secret
   namespace: hamilton
+
 type: Opaque
+
 stringData:
   access-key: minioadmin
-  secret-key: minioadmin-change-me
+  secret-key: minioadmin123
+
 ---
+
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: hamilton-minio-pvc
   namespace: hamilton
+
 spec:
+  storageClassName: standard
+
   accessModes:
     - ReadWriteOnce
+
   resources:
     requests:
       storage: 2Gi
+
 ---
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: hamilton-minio
   namespace: hamilton
+
 spec:
   replicas: 1
+
   selector:
     matchLabels:
       app: hamilton-minio
+
   template:
     metadata:
       labels:
         app: hamilton-minio
+
     spec:
       containers:
         - name: minio
           image: minio/minio:latest
-          args: ["server","/data","--console-address",":9001"]
+
+          args:
+            - server
+            - /data
+            - --console-address
+            - ":9001"
+
           ports:
             - containerPort: 9000
             - containerPort: 9001
+
           env:
             - name: MINIO_ROOT_USER
               valueFrom:
                 secretKeyRef:
                   name: hamilton-minio-secret
                   key: access-key
+
             - name: MINIO_ROOT_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: hamilton-minio-secret
                   key: secret-key
+
           volumeMounts:
-            - name: data
+            - name: minio-data
               mountPath: /data
+
       volumes:
-        - name: data
+        - name: minio-data
           persistentVolumeClaim:
             claimName: hamilton-minio-pvc
+
 ---
+
 apiVersion: v1
 kind: Service
 metadata:
   name: hamilton-minio
   namespace: hamilton
+
 spec:
   type: ClusterIP
+
   selector:
     app: hamilton-minio
+
   ports:
     - name: api
       port: 9000
       targetPort: 9000
+
     - name: console
       port: 9001
       targetPort: 9001

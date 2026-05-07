@@ -22,17 +22,18 @@ spec:
           startupProbe:
             tcpSocket:
               port: 8085
-            failureThreshold: 30
+            initialDelaySeconds: 20
+            failureThreshold: 60
             periodSeconds: 5
           readinessProbe:
             tcpSocket:
               port: 8085
-            initialDelaySeconds: 10
+            initialDelaySeconds: 20
             periodSeconds: 5
           livenessProbe:
             tcpSocket:
               port: 8085
-            initialDelaySeconds: 30
+            initialDelaySeconds: 90
             periodSeconds: 10
           env:
             - name: SPRING_DATASOURCE_URL

@@ -7,8 +7,8 @@ metadata:
 type: Opaque
 
 stringData:
-  access-key: minioadmin
-  secret-key: minioadmin123
+  access-key: "minioadmin"
+  secret-key: "minioadmin123"
 
 ---
 

@@ -3,12 +3,13 @@ kind: Secret
 metadata:
   name: hamilton-postgres-secret
   namespace: hamilton
+
 type: Opaque
 
 stringData:
-  POSTGRES_USER: postgres
-  POSTGRES_PASSWORD: 12345
-  POSTGRES_DB: hamilton_finance
+  POSTGRES_USER: "postgres"
+  POSTGRES_PASSWORD: "12345"
+  POSTGRES_DB: "hamilton_finance"
 
 ---
 

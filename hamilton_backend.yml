@@ -13,13 +13,6 @@ spec:
       labels:
         app: hamilton-backend
     spec:
-      initContainers:
-        - name: wait-for-postgres
-          image: postgres:16-alpine
-          command:
-            - sh
-            - -c
-            - until pg_isready -h hamilton-postgres -p 5432 -U postgres; do echo waiting for postgres; sleep 2; done
       containers:
         - name: hamilton-backend
           image: samirhasanov/hamilton_backend:latest
@@ -43,7 +36,7 @@ spec:
             periodSeconds: 10
           env:
             - name: SPRING_DATASOURCE_URL
-              value: "jdbc:postgresql://hamilton-postgres:5432/hamilton_finance"
+              value: "jdbc:postgresql://hamilton-postgres.hamilton.svc.cluster.local:5432/hamilton_finance"
             - name: SPRING_DATASOURCE_USERNAME
               valueFrom:
                 secretKeyRef:
@@ -57,7 +50,7 @@ spec:
             - name: SPRING_JPA_HIBERNATE_DDL_AUTO
               value: "update"
             - name: HAMILTON_MINIO_ENDPOINT
-              value: "http://hamilton-minio:9000"
+              value: "http://hamilton-minio.hamilton.svc.cluster.local:9000"
             - name: HAMILTON_MINIO_ACCESS_KEY
               valueFrom:
                 secretKeyRef:
